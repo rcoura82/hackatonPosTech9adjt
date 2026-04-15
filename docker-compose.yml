@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rnds_postgres
+    environment:
+      POSTGRES_DB: rnds_ressarcimento
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rnds_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/rnds_ressarcimento
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: "3c4f2e8a1b9d0e7f6c3a2d1e8b5f9a0c3d2e1f8b7a6c5d4e3f2a1b0c9d8e7f6a"
+      BLOCKCHAIN_PERMISSIONED_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+volumes:
+  postgres_data:

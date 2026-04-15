@@ -1,0 +1,653 @@
+{
+  "info": {
+    "name": "RNDS Ressarcimento SUS API",
+    "description": "Collection Postman gerada a partir dos endpoints Swagger implementados no backend RNDS Ressarcimento.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "operatorId",
+      "value": ""
+    },
+    {
+      "key": "beneficiaryId",
+      "value": ""
+    },
+    {
+      "key": "procedureId",
+      "value": ""
+    },
+    {
+      "key": "authorizationId",
+      "value": ""
+    },
+    {
+      "key": "reimbursementId",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Autenticacao",
+      "item": [
+        {
+          "name": "Login SUS",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sus.admin\",\n  \"password\": \"sus123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.accessToken) {",
+                  "  pm.collectionVariables.set('token', json.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Operadora",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"operadora.admin\",\n  \"password\": \"op123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Operadoras",
+      "item": [
+        {
+          "name": "Criar Operadora",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ansCode\": \"123456\",\n  \"corporateName\": \"Operadora Demo SA\",\n  \"cnpj\": \"11222333000199\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/operadoras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "operadoras"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Operadoras",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/operadoras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "operadoras"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beneficiarios",
+      "item": [
+        {
+          "name": "Criar Beneficiario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document\": \"12345678901\",\n  \"name\": \"Maria Souza\",\n  \"operatorId\": \"{{operatorId}}\",\n  \"planNumber\": \"PLANO-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/beneficiarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "beneficiarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Beneficiarios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/beneficiarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "beneficiarios"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Procedimentos",
+      "item": [
+        {
+          "name": "Criar Procedimento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tussCode\": \"30101012\",\n  \"description\": \"Consulta ambulatorial\",\n  \"type\": \"APAC\",\n  \"baseCost\": 250.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/procedimentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "procedimentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Procedimentos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/procedimentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "procedimentos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autorizacoes AIH APAC ABI",
+      "item": [
+        {
+          "name": "Criar Autorizacao",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalCode\": \"AIH-0001\",\n  \"type\": \"APAC\",\n  \"beneficiaryId\": \"{{beneficiaryId}}\",\n  \"operatorId\": \"{{operatorId}}\",\n  \"procedureId\": \"{{procedureId}}\",\n  \"requestedAmount\": 300.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/autorizacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "autorizacoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Autorizacoes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/autorizacoes?beneficiaryId={{beneficiaryId}}&type=APAC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "autorizacoes"
+              ],
+              "query": [
+                {
+                  "key": "beneficiaryId",
+                  "value": "{{beneficiaryId}}"
+                },
+                {
+                  "key": "type",
+                  "value": "APAC"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ressarcimentos",
+      "item": [
+        {
+          "name": "Gerar Ressarcimento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authorizationId\": \"{{authorizationId}}\",\n  \"operatorId\": \"{{operatorId}}\",\n  \"susUnit\": \"SUS-DF-HRAN\",\n  \"amount\": 300.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ressarcimentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ressarcimentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar Ressarcimento Como Pago",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ressarcimentos/{{reimbursementId}}/pagar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ressarcimentos",
+                "{{reimbursementId}}",
+                "pagar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Ressarcimentos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ressarcimentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ressarcimentos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Custos",
+      "item": [
+        {
+          "name": "Custos Por Beneficiario",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/custos/beneficiarios/{{beneficiaryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "custos",
+                "beneficiarios",
+                "{{beneficiaryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Custos Por Operadora",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/custos/operadoras/{{operatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "custos",
+                "operadoras",
+                "{{operatorId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Relatorios SUS",
+      "item": [
+        {
+          "name": "Ressarcimento Acumulado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sus/relatorios/ressarcimento-acumulado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sus",
+                "relatorios",
+                "ressarcimento-acumulado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analise De Procedimentos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sus/relatorios/analise-procedimentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sus",
+                "relatorios",
+                "analise-procedimentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Exportar Relatorios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sus/relatorios/exportar?formato=csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sus",
+                "relatorios",
+                "exportar"
+              ],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "csv"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Configuracoes",
+      "item": [
+        {
+          "name": "Criar Atualizar Credenciais",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationType\": \"OPERADORA\",\n  \"organizationId\": \"{{operatorId}}\",\n  \"username\": \"integracao.operadora\",\n  \"password\": \"senhaSegura123\",\n  \"roles\": [\"ROLE_FINANCEIRO\", \"ROLE_OPERACIONAL\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/configuracoes/credenciais",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "configuracoes",
+                "credenciais"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Credenciais",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/configuracoes/credenciais",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "configuracoes",
+                "credenciais"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Atualizar Integracao",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationType\": \"OPERADORA\",\n  \"organizationId\": \"{{operatorId}}\",\n  \"endpoint\": \"https://gateway-permissionado.exemplo/api\",\n  \"apiKey\": \"chave-super-secreta\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/configuracoes/integracoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "configuracoes",
+                "integracoes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Integracoes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/configuracoes/integracoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "configuracoes",
+                "integracoes"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blockchain",
+      "item": [
+        {
+          "name": "Consultar Ledger",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blockchain/ledger",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "blockchain",
+                "ledger"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Validar Integridade",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/blockchain/validacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "blockchain",
+                "validacao"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

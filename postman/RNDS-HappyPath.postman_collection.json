@@ -1,0 +1,365 @@
+{
+  "info": {
+    "name": "RNDS Ressarcimento — Happy Path",
+    "description": "Fluxo completo encadeado: Login → Operadora → Beneficiário → Procedimento → Autorização (AIH) → Ressarcimento → Pagamento → Relatórios → Blockchain. Cada request salva automaticamente IDs necessários para o próximo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "rnds-demo-2026"
+  },
+  "variable": [
+    { "key": "baseUrl",         "value": "http://localhost:8080", "type": "string" },
+    { "key": "token",           "value": "",                      "type": "string" },
+    { "key": "operatorId",      "value": "",                      "type": "string" },
+    { "key": "beneficiaryId",   "value": "",                      "type": "string" },
+    { "key": "procedureId",     "value": "",                      "type": "string" },
+    { "key": "authorizationId", "value": "",                      "type": "string" },
+    { "key": "reimbursementId", "value": "",                      "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "01 — Login SUS Admin",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"sus.admin\",\n  \"password\": \"sus123\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Token presente', () => pm.expect(json.accessToken).to.be.a('string'));",
+            "pm.collectionVariables.set('token', json.accessToken);",
+            "console.log('✔ Token capturado. Role:', json.role);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "02 — Cadastrar Operadora",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/operadoras", "host": ["{{baseUrl}}"], "path": ["api","v1","operadoras"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Unimed Centro-Oeste\",\n  \"cnpj\": \"12345678000199\",\n  \"registrationNumber\": \"302584\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Operadora criada (201)', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('operatorId', json.id);",
+            "console.log('✔ operatorId =', json.id);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "03 — Cadastrar Beneficiário",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/beneficiarios", "host": ["{{baseUrl}}"], "path": ["api","v1","beneficiarios"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Maria das Graças Oliveira\",\n  \"document\": \"12345678900\",\n  \"cns\": \"700000000000001\",\n  \"operatorId\": \"{{operatorId}}\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Beneficiário criado (201)', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('beneficiaryId', json.id);",
+            "console.log('✔ beneficiaryId =', json.id);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "04 — Cadastrar Procedimento (SIGTAP)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/procedimentos", "host": ["{{baseUrl}}"], "path": ["api","v1","procedimentos"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"0407010064\",\n  \"description\": \"Apendicectomia\",\n  \"tableReference\": \"SIGTAP\",\n  \"unitValue\": 1250.00\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Procedimento criado (201)', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('procedureId', json.id);",
+            "console.log('✔ procedureId =', json.id);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "05 — Emitir Autorização AIH",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/autorizacoes", "host": ["{{baseUrl}}"], "path": ["api","v1","autorizacoes"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"beneficiaryId\": \"{{beneficiaryId}}\",\n  \"procedureId\":  \"{{procedureId}}\",\n  \"operatorId\":   \"{{operatorId}}\",\n  \"type\": \"AIH\",\n  \"issueDate\": \"2026-04-15\",\n  \"quantity\": 1\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Autorização emitida (201)', () => pm.response.to.have.status(201));",
+            "pm.test('Status = AUTORIZADO', () => pm.expect(json.status).to.eql('AUTORIZADO'));",
+            "pm.collectionVariables.set('authorizationId', json.id);",
+            "console.log('✔ authorizationId =', json.id, '| status:', json.status);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "06 — Gerar Ressarcimento",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/ressarcimentos", "host": ["{{baseUrl}}"], "path": ["api","v1","ressarcimentos"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"authorizationId\": \"{{authorizationId}}\",\n  \"operatorId\":       \"{{operatorId}}\",\n  \"beneficiaryId\":    \"{{beneficiaryId}}\",\n  \"amount\":           1250.00,\n  \"competenceMonth\":  \"2026-04\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Ressarcimento gerado (201)', () => pm.response.to.have.status(201));",
+            "pm.test('Status = PENDENTE', () => pm.expect(json.status).to.eql('PENDENTE'));",
+            "pm.collectionVariables.set('reimbursementId', json.id);",
+            "console.log('✔ reimbursementId =', json.id, '| R$', json.amount);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "07 — Registrar Pagamento (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/ressarcimentos/{{reimbursementId}}/pagar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","ressarcimentos","{{reimbursementId}}","pagar"]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Pagamento registrado (200)', () => pm.response.to.have.status(200));",
+            "pm.test('Status = PAGO', () => pm.expect(json.status).to.eql('PAGO'));",
+            "console.log('✔ Pagamento confirmado. status:', json.status);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "08a — Relatório Acumulado de Ressarcimento",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/sus/relatorios/ressarcimento-acumulado", "host": ["{{baseUrl}}"], "path": ["api","v1","sus","relatorios","ressarcimento-acumulado"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Relatório retornado (200)', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "console.log('✔ Total ressarcido: R$', json.totalAmount || json.total || JSON.stringify(json));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "08b — Análise de Procedimentos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/sus/relatorios/analise-procedimentos", "host": ["{{baseUrl}}"], "path": ["api","v1","sus","relatorios","analise-procedimentos"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Análise retornada (200)', () => pm.response.to.have.status(200));",
+            "console.log('✔ Análise OK. Items:', pm.response.json().length);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "08c — Custo por Beneficiário",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/custos/beneficiarios/{{beneficiaryId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","custos","beneficiarios","{{beneficiaryId}}"]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Custo beneficiário (200)', () => pm.response.to.have.status(200));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "08d — Custo por Operadora",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/custos/operadoras/{{operatorId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","custos","operadoras","{{operatorId}}"]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Custo operadora (200)', () => pm.response.to.have.status(200));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "09a — Ledger Blockchain",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/blockchain/ledger", "host": ["{{baseUrl}}"], "path": ["api","v1","blockchain","ledger"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Ledger retornado (200)', () => pm.response.to.have.status(200));",
+            "const blocks = pm.response.json();",
+            "pm.test('Tem blocos no ledger', () => pm.expect(blocks.length).to.be.greaterThan(0));",
+            "console.log('✔ Total de blocos no ledger:', blocks.length);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "09b — Validação Integridade Blockchain",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/blockchain/validacao", "host": ["{{baseUrl}}"], "path": ["api","v1","blockchain","validacao"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Validação OK (200)', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.test('Blockchain íntegro', () => pm.expect(json.valid).to.be.true);",
+            "console.log('✔ Blockchain válido:', json.valid, '| Blocos:', json.blockCount);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    },
+    {
+      "name": "10 — Login Operadora (RBAC test)",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"operadora.admin\",\n  \"password\": \"op123\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "pm.test('Login operadora OK', () => pm.response.to.have.status(200));",
+            "const opToken = json.accessToken;",
+            "console.log('✔ Token operadora capturado. Role:', json.role);",
+            "",
+            "// Testa que operadora NÃO pode registrar pagamento (403)",
+            "pm.sendRequest({",
+            "  url: pm.collectionVariables.get('baseUrl') + '/api/v1/ressarcimentos/' + pm.collectionVariables.get('reimbursementId') + '/pagar',",
+            "  method: 'PATCH',",
+            "  header: { 'Authorization': 'Bearer ' + opToken }",
+            "}, (err, res) => {",
+            "  pm.test('Operadora BLOQUEADA no PATCH /pagar (403)', () => {",
+            "    pm.expect(res.code).to.be.oneOf([403, 401]);",
+            "  });",
+            "  console.log('✔ RBAC correto: operadora recebe', res.code, 'ao tentar pagar');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "response": []
+    }
+  ]
+}
